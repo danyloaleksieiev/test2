@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plinko - Game Results</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background-color: #f0f0f0;
+            padding: 20px;
+        }
+        .container {
+            width: 80%;
+            max-width: 800px;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            text-align: center; /* Center heading and button */
+        }
+        h1 {
+            margin-bottom: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f7f7f7;
+        }
+        .no-results {
+            font-style: italic;
+            color: #777;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 10px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Game Results</h1>
+        <div id="resultsTableContainer">
+            <!-- Table will be generated here by JavaScript -->
+            <p class="no-results">No results yet. Play some games!</p>
+        </div>
+        <button id="backToSetupButton">Back to Game Setup</button>
+        <button id="clearHistoryButton">Clear History</button>
+    </div>
+
+    <script>
+document.addEventListener('DOMContentLoaded', function() {
+    const resultsTableContainer = document.getElementById('resultsTableContainer');
+    const backToSetupButton = document.getElementById('backToSetupButton');
+    const clearHistoryButton = document.getElementById('clearHistoryButton');
+
+    function displayResults() {
+        const history = JSON.parse(localStorage.getItem('plinkoPlayHistory')) || [];
+        resultsTableContainer.innerHTML = ''; // Clear previous content (e.g., "No results" message)
+
+        if (history.length === 0) {
+            const p = document.createElement('p');
+            p.className = 'no-results';
+            p.textContent = 'No results yet. Play some games!';
+            resultsTableContainer.appendChild(p);
+            return;
+        }
+
+        const table = document.createElement('table');
+        const thead = document.createElement('thead');
+        const tbody = document.createElement('tbody');
+
+        // Create table header
+        const headerRow = document.createElement('tr');
+        const headers = ['Date', 'Bet', 'Risk', 'Rows', 'Multiplier', 'Winnings'];
+        headers.forEach(text => {
+            const th = document.createElement('th');
+            th.textContent = text;
+            headerRow.appendChild(th);
+        });
+        thead.appendChild(headerRow);
+        table.appendChild(thead);
+
+        // Create table body
+        history.forEach(play => {
+            const row = document.createElement('tr');
+            const cells = [
+                play.date || new Date(play.timestamp).toLocaleString(), // Handle old and new date formats
+                play.bet,
+                play.risk,
+                play.rows,
+                play.multiplier + 'x',
+                play.winnings
+            ];
+            cells.forEach(cellData => {
+                const td = document.createElement('td');
+                td.textContent = cellData;
+                row.appendChild(td);
+            });
+            tbody.appendChild(row);
+        });
+        table.appendChild(tbody);
+        resultsTableContainer.appendChild(table);
+    }
+
+    backToSetupButton.onclick = function() {
+        window.location.href = 'plinko_setup.html';
+    };
+
+    clearHistoryButton.onclick = function() {
+        if (confirm('Are you sure you want to clear all game history? This cannot be undone.')) {
+            localStorage.removeItem('plinkoPlayHistory');
+            displayResults(); // Refresh the table
+            alert('Game history cleared.');
+        }
+    };
+
+    // Initial display of results when the page loads
+    displayResults();
+});
+    </script>
+</body>
+</html>

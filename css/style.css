@@ -1,0 +1,171 @@
+/* General Body Styles */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100vh;
+    margin: 0;
+    background-color: #1a202c; /* Dark background */
+    color: #e2e8f0; /* Light text */
+    padding-top: 20px;
+    box-sizing: border-box;
+}
+
+/* Container for main content areas */
+.container {
+    width: 90%;
+    max-width: 700px; /* Max width for general containers */
+    background-color: #2d3748; /* Slightly lighter dark shade for containers */
+    padding: 25px;
+    border-radius: 8px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    margin-bottom: 20px;
+}
+
+h1 {
+    text-align: center;
+    color: #a0aec0; /* Lighter grey for headings */
+    margin-bottom: 25px;
+}
+
+/* Form elements styling */
+.form-group {
+    margin-bottom: 20px;
+}
+
+label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: bold;
+    color: #cbd5e0; /* Light grey for labels */
+}
+
+input[type="number"],
+select {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #4a5568; /* Darker border */
+    border-radius: 6px;
+    box-sizing: border-box;
+    background-color: #1a202c; /* Input background */
+    color: #e2e8f0; /* Input text color */
+    font-size: 1em;
+}
+
+input[type="number"]:focus,
+select:focus {
+    outline: none;
+    border-color: #4299e1; /* Blue border on focus */
+    box-shadow: 0 0 0 2px rgba(66, 153, 225, 0.5);
+}
+
+/* Button Styling */
+button {
+    width: 100%; /* Make buttons in .container full width by default */
+    padding: 12px 20px;
+    background-color: #3182ce; /* Blue primary button */
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 1.1em;
+    font-weight: bold;
+    transition: background-color 0.2s ease-in-out;
+    margin-top: 10px; /* Add some space above buttons */
+}
+
+button:hover {
+    background-color: #2b6cb0; /* Darker blue on hover */
+}
+
+button:disabled {
+    background-color: #4a5568; /* Greyed out when disabled */
+    cursor: not-allowed;
+}
+
+/* Specific to plinko_game.html */
+#infoDisplay {
+    width: 90%;
+    max-width: 600px;
+    display: flex;
+    justify-content: space-around;
+    flex-wrap: wrap; /* Allow wrapping on smaller screens */
+    margin-bottom: 20px;
+    background-color: #2d3748; /* Consistent with .container */
+    padding: 15px;
+    border-radius: 8px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    color: #e2e8f0;
+}
+
+#infoDisplay div {
+    text-align: center;
+    margin: 5px 10px; /* Spacing for items */
+    font-size: 0.95em;
+}
+#infoDisplay div span {
+    font-weight: bold;
+    color: #fff;
+}
+
+#gameCanvas {
+    border: 2px solid #4a5568; /* Border for canvas */
+    background-color: #0f172a; /* Very dark background for canvas for contrast */
+    border-radius: 8px;
+    box-shadow: 0 0 15px rgba(0,0,0,0.3);
+    max-width: 100%; /* Ensure canvas is responsive */
+    height: auto; /* Maintain aspect ratio if width is constrained */
+}
+
+.controls { /* Container for buttons below canvas */
+    margin-top: 20px;
+    display: flex;
+    justify-content: center;
+    gap: 15px; /* Space between buttons */
+    width: 90%;
+    max-width: 600px;
+}
+.controls button {
+    width: auto; /* Override full-width for these specific buttons */
+    min-width: 150px; /* Minimum width for control buttons */
+}
+
+
+/* Specific to plinko_results.html */
+#resultsTableContainer {
+    width: 100%;
+    overflow-x: auto; /* Allow horizontal scrolling for table if needed */
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+    background-color: #2d3748; /* Match container background */
+}
+
+th, td {
+    border: 1px solid #4a5568; /* Darker borders for table cells */
+    padding: 10px 12px;
+    text-align: left;
+    color: #cbd5e0; /* Light text for table content */
+}
+
+th {
+    background-color: #1a202c; /* Darker background for table headers */
+    color: #a0aec0; /* Lighter grey for header text */
+    font-weight: bold;
+}
+
+.no-results {
+    font-style: italic;
+    color: #a0aec0; /* Lighter grey for "no results" message */
+    text-align: center;
+    padding: 20px;
+}
+
+/* Ensure buttons on results page are not full width if they are not in a .controls div */
+#plinko_results .container button { /* Example if needed, but default is already good */
+    /* width: auto; */ /* Can adjust if needed */
+}
