@@ -138,6 +138,37 @@ const MULTIPLIERS = {
     }
 };
 
+function animateCounter(element, targetValue, duration, isCurrency = false, isMultiplier = false) {
+    const startValue = parseFloat(element.textContent.replace('x', '')) || 0; // Remove 'x' for multiplier parsing
+    const increment = (targetValue - startValue) / (duration / 16); // Approx 60fps
+    let currentValue = startValue;
+    let startTime = null;
+
+    function step(timestamp) {
+        if (!startTime) startTime = timestamp;
+        const progress = timestamp - startTime;
+        // Ensure currentValue does not overshoot due to large increments from fast progress
+        currentValue = startValue + increment * (progress / (1000 / 60)); // Using 1000/60 for frame time
+
+        if ((increment > 0 && currentValue >= targetValue) || (increment < 0 && currentValue <= targetValue) || increment === 0) {
+            currentValue = targetValue;
+        }
+
+        if (isCurrency) {
+            element.textContent = currentValue.toFixed(2);
+        } else if (isMultiplier) {
+            element.textContent = currentValue.toFixed(currentValue < 10 ? 2 : 1) + 'x'; // More precision for smaller multipliers
+        } else {
+            element.textContent = Math.round(currentValue);
+        }
+
+        if (currentValue !== targetValue) {
+            requestAnimationFrame(step);
+        }
+    }
+    requestAnimationFrame(step);
+}
+
 class Ball {
     constructor(x, y, radius, color) {
         this.x = x;
@@ -176,8 +207,20 @@ class Ball {
                     this.vx = 0;
 
                     const winnings = betAmount * slot.multiplier;
-                    multiplierDisplay.textContent = slot.multiplier + 'x';
-                    winningsDisplay.textContent = winnings.toFixed(2);
+
+                    // Slot highlighting
+                    const originalSlotColor = slot.color; // Should be SLOT_COLOR_DEFAULT
+                    slot.color = 'var(--accent-gold)'; 
+                    drawBoard(); 
+                    
+                    setTimeout(() => {
+                        slot.color = originalSlotColor; 
+                        drawBoard(); 
+                    }, 1500);
+
+                    // Animate counters
+                    animateCounter(multiplierDisplay, slot.multiplier, 800, false, true);
+                    animateCounter(winningsDisplay, winnings, 1000, true);
 
                     // Store play history
                     let history = JSON.parse(localStorage.getItem('plinkoPlayHistory')) || [];
