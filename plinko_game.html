@@ -55,6 +55,13 @@
     </style>
 </head>
 <body>
+    <div class="container"> <!-- Assuming this is the main game container -->
+        <div id="lastPlaysContainer">
+            <span class="last-plays-label">Recent:</span>
+            <div id="lastPlaysDisplay">
+                <!-- Last plays will be populated here -->
+            </div>
+        </div>
     <div id="infoDisplay">
         <div>Bet: <span id="betDisplay">-</span></div>
         <div>Risk: <span id="riskDisplay">-</span></div>
@@ -90,18 +97,18 @@ let numRows;
 
 // --- Board Configuration ---
 const PEG_RADIUS = 8;
-const PEG_COLOR = '#333';
+// const PEG_COLOR = '#333'; // Removed for Style 2025
 const PEG_SPACING_X = 50; 
 const PEG_SPACING_Y = 40;
 const BOARD_PADDING_X = 50; // Padding on the sides of the board
 const TOP_OFFSET = 50; // Space above the first row of pegs for ball drop
 const BOTTOM_SLOT_HEIGHT = 50;
 const SLOT_WIDTH = PEG_SPACING_X; 
-const SLOT_COLOR_DEFAULT = '#888';
-const SLOT_TEXT_COLOR = '#fff';
+// const SLOT_COLOR_DEFAULT = '#888'; // Removed for Style 2025 - handled in drawBoard
+// const SLOT_TEXT_COLOR = '#fff'; // Removed for Style 2025 - handled in drawBoard
 
 const BALL_RADIUS = 7;
-const BALL_COLOR = 'red';
+// const BALL_COLOR = 'red'; // Removed for Style 2025
 const GRAVITY = 0.2; // Adjust for desired speed
 const DAMPENING = 0.6; // Energy loss on bounce, less than 1
 const HORIZONTAL_PUSH = 2; // How much horizontal push from a peg hit
@@ -115,28 +122,65 @@ let slots = [];
 // --- Multipliers (Placeholders - to be refined based on risk) ---
 // These are just examples. The number of slots depends on numRows + 1
 const MULTIPLIERS = {
-    low: {
-        '8': [10, 5, 2, 1.1, 0.5, 1.1, 2, 5, 10],
-        '10': [12, 6, 3, 1.5, 0.5, 0.5, 1.5, 3, 6, 12],
-        '12': [16, 8, 4, 2, 1.1, 0.5, 0.5, 1.1, 2, 4, 8, 16],
-        '14': [20, 10, 5, 2.5, 1.2, 0.5, 0.4, 0.5, 1.2, 2.5, 5, 10, 20],
-        '16': [30, 15, 7, 3, 1.5, 1, 0.5, 0.4, 0.5, 1, 1.5, 3, 7, 15, 30]
+    low: { // Focus on lower payouts, many <1x, house edge more evident
+        '8':  [5,  2,  1.5, 0.7, 0.4, 0.7, 1.5, 2,  5],
+        '10': [7,  3,  1.2, 0.6, 0.3, 0.3, 0.6, 1.2, 3,  7],
+        '12': [10, 4,  1.5, 0.7, 0.4, 0.2, 0.4, 0.7, 1.5, 4,  10],
+        '14': [12, 5,  2,   0.8, 0.5, 0.3, 0.2, 0.3, 0.5, 0.8, 2,   5,  12],
+        '16': [15, 6,  2.5, 1,   0.6, 0.4, 0.2, 0.1, 0.2, 0.4, 0.6, 1,   2.5, 6,  15]
     },
-    medium: { // Generally higher potential, but also lower lows
-        '8': [20, 7, 3, 1.2, 0.4, 1.2, 3, 7, 20],
-        '10': [30, 10, 4, 1.8, 0.4, 0.4, 1.8, 4, 10, 30],
-        '12': [80, 15, 8, 2, 0.8, 0.4, 0.4, 0.8, 2, 8, 15, 80],
-        '14': [120, 25, 10, 3, 1, 0.4, 0.2, 0.4, 1, 3, 10, 25, 120],
-        '16': [200, 50, 15, 5, 1.5, 0.5, 0.2, 0.1, 0.2, 0.5, 1.5, 5, 15, 50, 200]
+    medium: { // Mix of some wins, but average clearly < bet. Higher variance than low.
+        '8':  [15, 5,  2,   0.8, 0.3, 0.8, 2,   5,  15],
+        '10': [20, 7,  2.5, 1,   0.4, 0.2, 0.4, 1,   2.5, 7,  20],
+        '12': [30, 10, 3,   1.2, 0.5, 0.1, 0.1, 0.5, 1.2, 3,   10, 30],
+        '14': [50, 15, 4,   1.5, 0.6, 0.3, 0.1, 0.3, 0.6, 1.5, 4,   15, 50],
+        '16': [70, 20, 5,   2,   0.8, 0.4, 0.2, 0.05,0.2, 0.4, 0.8, 2,   5,   20, 70]
     },
-    high: { // Even more extreme
-        '8': [50, 10, 4, 1, 0.3, 1, 4, 10, 50],
-        '10': [100, 20, 5, 1.5, 0.3, 0.3, 1.5, 5, 20, 100],
-        '12': [250, 50, 10, 2, 0.5, 0.3, 0.3, 0.5, 2, 10, 50, 250],
-        '14': [500, 100, 20, 4, 1, 0.3, 0.1, 0.3, 1, 4, 20, 100, 500],
-        '16': [1000, 200, 50, 10, 2, 0.4, 0.1, 0.05, 0.1, 0.4, 2, 10, 50, 200, 1000]
+    high: { // Highest potential rewards but many very low outcomes. Highest variance.
+        '8':  [40,  10, 3,   0.5, 0.1, 0.5, 3,   10, 40],
+        '10': [100, 15, 4,   0.8, 0.2, 0.1, 0.2, 0.8, 4,   15, 100],
+        '12': [200, 25, 5,   1,   0.4, 0.1, 0.05,0.1, 0.4, 1,   5,   25, 200],
+        '14': [300, 50, 10,  2,   0.5, 0.2, 0.05,0.1,0.05,0.2, 0.5, 2,   10,  50, 300],
+        '16': [500, 75, 15,  3,   0.8, 0.3, 0.1, 0.02,0.05,0.1,0.3, 0.8, 3,   15,  75, 500]
     }
 };
+
+function updateLastPlaysDisplay() {
+    const displayElement = document.getElementById('lastPlaysDisplay');
+    if (!displayElement) return;
+
+    const history = JSON.parse(localStorage.getItem('plinkoPlayHistory')) || [];
+    const recentPlays = history.slice(0, 5); // Get last 5 plays
+
+    displayElement.innerHTML = ''; // Clear old items
+
+    if (recentPlays.length === 0) {
+        // Optionally, display a placeholder like "No recent plays"
+        // For now, just leave it empty or hide #lastPlaysContainer if empty.
+        // Let's hide the container if there's no history to show.
+        const container = document.getElementById('lastPlaysContainer');
+        if(container) container.style.display = 'none';
+        return;
+    }
+    
+    const container = document.getElementById('lastPlaysContainer');
+    if(container) container.style.display = 'flex'; // Ensure it's visible
+
+    recentPlays.reverse().forEach(play => { // Reverse to show oldest of recent first (left-to-right)
+        const item = document.createElement('span');
+        item.classList.add('last-play-item');
+        const multiplier = parseFloat(play.multiplier);
+        item.textContent = multiplier.toFixed(multiplier < 10 && multiplier !== Math.floor(multiplier) ? 2 : (multiplier === Math.floor(multiplier) ? 0 : 1) ) + 'x';
+
+
+        if (multiplier > 1) {
+            item.classList.add('last-play-win');
+        } else {
+            item.classList.add('last-play-loss');
+        }
+        displayElement.appendChild(item);
+    });
+}
 
 function animateCounter(element, targetValue, duration, isCurrency = false, isMultiplier = false) {
     const startValue = parseFloat(element.textContent.replace('x', '')) || 0; // Remove 'x' for multiplier parsing
@@ -181,9 +225,17 @@ class Ball {
     }
 
     draw() {
+        // Style 2025 Ball - Glowing Orb
+        const ballOuterColor = 'rgba(255, 0, 230, 0.1)';  // Transparent magenta for outer glow
+        const ballInnerColor = 'rgba(255, 0, 230, 1)';    // Solid magenta for core
+
         ctx.beginPath();
+        const gradient = ctx.createRadialGradient(this.x, this.y, this.radius * 0.2, this.x, this.y, this.radius);
+        gradient.addColorStop(0, ballInnerColor);
+        gradient.addColorStop(1, ballOuterColor);
+        
+        ctx.fillStyle = gradient;
         ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-        ctx.fillStyle = this.color;
         ctx.fill();
         ctx.closePath();
     }
@@ -236,6 +288,7 @@ class Ball {
                         history = history.slice(0, 20);
                     }
                     localStorage.setItem('plinkoPlayHistory', JSON.stringify(history));
+                    updateLastPlaysDisplay(); // Add this call
                     
                     // Optional: Highlight the slot (visual feedback)
                     // This could be done by temporarily changing slot.color and redrawing
@@ -367,7 +420,7 @@ function generateBoard() {
             width: SLOT_WIDTH,
             height: BOTTOM_SLOT_HEIGHT,
             multiplier: currentMultipliers[i] !== undefined ? currentMultipliers[i] : 0.1, // Fallback multiplier
-            color: SLOT_COLOR_DEFAULT
+            // color: SLOT_COLOR_DEFAULT // color property will be used for highlight state
         });
     }
 }
@@ -375,28 +428,70 @@ function generateBoard() {
 function drawBoard() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    // Draw Pegs
-    ctx.fillStyle = PEG_COLOR;
+    // Draw Pegs - Style 2025
+    const pegCoreColor = 'rgba(0, 242, 255, 0.7)'; 
+    const pegGlowColor = 'rgba(0, 242, 255, 0.3)'; 
+    const pegRadiusOuter = PEG_RADIUS; 
+    const pegRadiusInner = PEG_RADIUS * 0.6;
+
     pegs.forEach(peg => {
+        // Outer glow
         ctx.beginPath();
-        ctx.arc(peg.x, peg.y, PEG_RADIUS, 0, Math.PI * 2);
+        ctx.arc(peg.x, peg.y, pegRadiusOuter, 0, Math.PI * 2);
+        ctx.fillStyle = pegGlowColor;
+        ctx.fill();
+
+        // Inner core
+        ctx.beginPath();
+        ctx.arc(peg.x, peg.y, pegRadiusInner, 0, Math.PI * 2);
+        ctx.fillStyle = pegCoreColor;
         ctx.fill();
     });
 
-    // Draw Slots
-    ctx.font = '12px Arial';
+    // Draw Slots - Style 2025
+    const slotFont = 'bold 13px "Inter", sans-serif';
+    const slotTextColorDefault = '#e0e5f0'; // var(--primary-text)
+    const slotTextColorHighlight = '#FFFFFF';
+    const slotDefaultBg = 'rgba(0, 242, 255, 0.1)'; 
+    const slotDefaultBorder = 'rgba(0, 242, 255, 0.5)';
+    const slotHighlightBg = 'rgba(255, 215, 0, 0.3)'; // Gold background
+    const slotHighlightBorder = 'rgba(255, 215, 0, 0.8)'; // Brighter Gold border
+
+    ctx.font = slotFont;
+    ctx.textAlign = 'center';
+    ctx.lineWidth = 2;
+
     slots.forEach(slot => {
-        ctx.fillStyle = slot.color;
-        ctx.fillRect(slot.x, slot.y, slot.width, slot.height);
-        ctx.fillStyle = SLOT_TEXT_COLOR;
-        ctx.textAlign = 'center';
-        ctx.fillText(slot.multiplier + 'x', slot.x + slot.width / 2, slot.y + slot.height / 2 + 5);
+        ctx.beginPath();
+        // Use roundRect if available, otherwise fallback to rect
+        if (ctx.roundRect) {
+            ctx.roundRect(slot.x, slot.y, slot.width, slot.height, [6]);
+        } else {
+            ctx.rect(slot.x, slot.y, slot.width, slot.height);
+        }
+
+        if (slot.color === 'var(--accent-gold)') { // Check if it's the highlight color string
+            ctx.fillStyle = slotHighlightBg;
+            ctx.strokeStyle = slotHighlightBorder;
+            ctx.fill();
+            ctx.stroke();
+            ctx.fillStyle = slotTextColorHighlight;
+        } else {
+            ctx.fillStyle = slotDefaultBg;
+            ctx.strokeStyle = slotDefaultBorder;
+            ctx.fill();
+            ctx.stroke();
+            ctx.fillStyle = slotTextColorDefault;
+        }
+        
+        ctx.fillText(slot.multiplier + 'x', slot.x + slot.width / 2, slot.y + slot.height / 2 + 5); // +5 to vertically center roughly
     });
 }
 
 // --- Initialization ---
 function initializeGame() {
     loadSettings();
+    updateLastPlaysDisplay(); // Add this call
     setupCanvas();
     generateBoard();
     // Create the ball, position it at the top entry point
@@ -409,7 +504,8 @@ function initializeGame() {
     } else { 
         firstPegX = canvas.width / 2; // Fallback if no pegs (should not happen)
     }
-    ball = new Ball(firstPegX, TOP_OFFSET - BALL_RADIUS * 3, BALL_RADIUS, BALL_COLOR); // Start y well above first row
+    // BALL_COLOR argument removed as Ball.draw() now defines its own colors for Style 2025
+    ball = new Ball(firstPegX, TOP_OFFSET - BALL_RADIUS * 3, BALL_RADIUS); 
     
     drawBoard(); // Initial static drawing of board
     ball.draw(); // Draw ball in its initial position
